@@ -133,27 +133,33 @@ void free_list(intll_t* head){
 int main(){
 	intll_t* head = NULL;
 
+	printf("Adding a new nodes with values 10, 20, 30.");
 	append(&head, 10);
 	append(&head, 20);
 	append(&head, 30);
-
 	print_ll(head);
 
+	printf("Prepending a node at the beginning of list with value 5.");
 	prepend(&head, 5);
 	print_ll(head);
 
+	printf("Inserting a node at index 2 with value 15.");
 	insert(&head, 2, 15);
 	print_ll(head);
 
+	printf("Deleting a node at index 3.");
 	del(&head, 3);
 	print_ll(head);
 
+	printf("Popping the first node.");
 	pop_head(&head);
 	print_ll(head);
 
+	printf("Popping the last node.");
 	pop_tail(&head);
 	print_ll(head);
 
+	printf("Freeing the list as the program ends.");
 	free_list(head);
 
 	return 0;
