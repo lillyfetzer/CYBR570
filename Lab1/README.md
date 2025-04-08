@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # CYBR 570 Lab 1: Analyzing Compiled Programs
 
 Submission date: 04/07/2025
@@ -8,7 +7,7 @@ Author: Lilly Carlascio
 ## Usage
 
 ```bash
-cd Lab1
+cd CYBR570_Lab1_LillyCarlascio
 
 #Compile C program linked_list
 gcc linked_list.c -o linked_list
