@@ -1,0 +1,15 @@
+Lab 2 Information
+
+Binary Received From: Sam
+Binary Passed To: Sam
+
+Original binary received from Sam: fromsam_original.out
+Binary I modified by changing the variable types, variable names, function names: fromsam_modified.out.gzf
+
+Guide file: CYBR570_Lab2Guide_LillyCarlascio.pdf
+
+My binary file: lab2binary (already compiled and stripped)
+- If needed to make executeable "chmod u+x lab2binary"
+- To run: ./lab2binary
+
+Original code file: linked_list_LAB2.c 
