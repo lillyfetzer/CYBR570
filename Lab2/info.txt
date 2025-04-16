@@ -13,3 +13,7 @@ My binary file: lab2binary (already compiled and stripped)
 - To run: ./lab2binary
 
 Original code file: linked_list_LAB2.c 
+
+Extra Credit Opportunities: 
+- I did ask for the two print statements to be kept
+- I did not ask for the struct definition and function protoypes
