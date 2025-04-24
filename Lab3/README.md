@@ -38,6 +38,10 @@ gcc input_guess_password.c -o input_guess_password
 ./guess_the_password
 What is the the password: 1NwL9RbBMq
 Correct
+
+#Also can run with an input file
+./guess_the_password < valid_input.txt
+What is the password:Correct
 ```
 
 ## task4 usage
