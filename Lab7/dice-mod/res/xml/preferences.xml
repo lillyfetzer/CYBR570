@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <SwitchPreference android:id="@id/enableShaking" android:title="@string/enable_shaking" android:key="enable_shaking" android:defaultValue="true" />
+    <SwitchPreference android:id="@id/enableVibration" android:title="@string/vibration_title" android:key="enable_vibration" android:defaultValue="true" />
+</PreferenceScreen>

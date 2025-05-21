@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="abc_action_bar_home_description">ホームに戻る</string>
+    <string name="abc_action_bar_up_description">前に戻る</string>
+    <string name="abc_action_menu_overflow_description">その他のオプション</string>
+    <string name="abc_action_mode_done">完了</string>
+    <string name="abc_activity_chooser_view_see_all">すべて表示</string>
+    <string name="abc_activitychooserview_choose_application">アプリの選択</string>
+    <string name="abc_capital_off">OFF</string>
+    <string name="abc_capital_on">ON</string>
+    <string name="abc_menu_alt_shortcut_label">Alt+</string>
+    <string name="abc_menu_ctrl_shortcut_label">Ctrl+</string>
+    <string name="abc_menu_delete_shortcut_label">Delete</string>
+    <string name="abc_menu_enter_shortcut_label">Enter</string>
+    <string name="abc_menu_function_shortcut_label">Function+</string>
+    <string name="abc_menu_meta_shortcut_label">Meta+</string>
+    <string name="abc_menu_shift_shortcut_label">Shift+</string>
+    <string name="abc_menu_space_shortcut_label">Space</string>
+    <string name="abc_menu_sym_shortcut_label">Sym+</string>
+    <string name="abc_prepend_shortcut_label">Menu+</string>
+    <string name="abc_search_hint">検索…</string>
+    <string name="abc_searchview_description_clear">検索キーワードを削除</string>
+    <string name="abc_searchview_description_query">検索キーワード</string>
+    <string name="abc_searchview_description_search">検索</string>
+    <string name="abc_searchview_description_submit">検索キーワードを送信</string>
+    <string name="abc_searchview_description_voice">音声検索</string>
+    <string name="abc_shareactionprovider_share_with">共有</string>
+    <string name="abc_shareactionprovider_share_with_application">%sと共有</string>
+    <string name="abc_toolbar_collapse_description">折りたたむ</string>
+    <string name="about">アプリについて</string>
+    <string name="about_affiliation">グループ</string>
+    <string name="about_author">作者: Karola Marky と貢献者たち</string>
+    <string name="action_about">アプリについて</string>
+    <string name="action_help">ヘルプ</string>
+    <string name="action_settings">設定</string>
+    <string name="action_tutorial">チュートリアル</string>
+    <string name="app_name">Dicer</string>
+    <string name="app_name_long">Privacy Friendly Dicer</string>
+    <string name="choose_dice_heading">サイコロの個数:</string>
+    <string name="choose_face_heading">サイコロの面数:</string>
+    <string name="enable_shaking">端末を振ってサイコロを振る</string>
+    <string name="github"><a href="https://github.com/SecUSo/privacy-friendly-dicer">Github-Repo</a></string>
+    <string name="help_button">ヘルプ</string>
+    <string name="help_general">概要</string>
+    <string name="help_general_description">Privacy Friendly Dicer は、最大 10 個の 6 面サイコロを振れるアプリです。サイコロの個数はスライダーで選択できます。</string>
+    <string name="help_general_dicing">ボタンを押すとサイコロを振れます。設定でオフにしていなければ、端末を振ってサイコロを振ることもできます。</string>
+    <string name="help_permissions_description">Privacy Friendly Dicer はバイブレーション権限を使用して、結果の更新を知らせます。権限が付与されていない場合は振動しません。</string>
+    <string name="help_permissions_heading">権限</string>
+    <string name="help_privacy_heading">プライバシー情報</string>
+    <string name="main_dice_sum">合計: %s</string>
+    <string name="more_info">詳細は以下をご覧ください:</string>
+    <string name="navigation_drawer_close">ナビゲーションドロワーを閉じる</string>
+    <string name="navigation_drawer_open">ナビゲーションドロワーを開く</string>
+    <string name="next">次へ</string>
+    <string name="okay">了解</string>
+    <string name="privacy_friendly">このアプリはドイツのカールスルーエ工科大学 (KIT - Karlsruher Institute for Technology) が開発するプライバシーを重視するアプリのグループの Privacy Friendly Apps に属します。ソースコードは GPLv3 の下で提供されます。画像の著作権は KIT と Google Inc が保持します。</string>
+    <string name="roll_button">サイコロを振る</string>
+    <string name="search_menu_title">検索</string>
+    <string name="settings_title">サイコロの設定</string>
+    <string name="skip">スキップ</string>
+    <string name="slide1_heading">ようこそ！</string>
+    <string name="slide1_text">スライダーでサイコロの個数を選択してください。ボタンを押すか端末を振ってサイコロを振ります。</string>
+    <string name="status_bar_notification_info_overflow">999+</string>
+    <string name="url"><a href="https://www.secuso.org/pfa">SECUSO-Website</a></string>
+    <string name="version_number">バージョン v%s</string>
+    <string name="vibration_title">バイブレーション</string>
+</resources>

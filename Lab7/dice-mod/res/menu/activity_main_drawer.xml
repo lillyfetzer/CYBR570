@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:icon="@drawable/ic_menu_tutorial" android:id="@id/nav_tutorial" android:title="@string/action_tutorial" />
+    <group android:id="@id/nav_group_settings">
+        <item android:icon="@drawable/ic_menu_settings" android:id="@id/nav_settimgs" android:title="@string/action_settings" />
+        <item android:icon="@drawable/ic_menu_help" android:id="@id/nav_help" android:title="@string/action_help" />
+        <item android:icon="@drawable/ic_menu_info" android:id="@id/nav_about" android:title="@string/action_about" />
+    </group>
+</menu>
