@@ -34,4 +34,12 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "Done! Final APK is: $FINAL_APK"
+# installing apk
+echo "Installing APK with adb."
+adb install "$FINAL_APK"
+if [ $? -ne 0 ]; then
+    echo "APK install failed."
+    exit 1
+fi
+
+echo "Done! Final APK installed is: $FINAL_APK"
