@@ -1,0 +1,282 @@
+<h1 id="reverse-engineering-fairemail-a-complete-how-to-guide">Reverse
+Engineering FairEmail: A Complete How-To Guide</h1>
+<p>FairEmail is an open-source, privacy-focused email client for
+Android. While its commitment to security makes it robust, this guide
+demonstrates how to reverse engineer FairEmail for educational and
+security research purposes, specially focusing on authentication flows
+and SSL pinning mechanisms.</p>
+<blockquote>
+<p><strong>Disclaimer:</strong> This guide is for <strong>educational
+purposes only</strong>. Reverse engineering and inspecting application
+behavior without consent may violate terms of service or laws depending
+on your jurisdiction. Always test responsibly and on your own device or
+within a controlled lab environment.</p>
+</blockquote>
+<hr />
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li><strong>Operating System</strong>: Linux</li>
+<li><strong>Android Emulator</strong>: Android Studio AVD</li>
+<li><strong>APK Decompilation Tools</strong>:
+<ul>
+<li><code>apktool</code></li>
+<li><code>jadx</code> or <code>jadx-gui</code></li>
+<li><code>frida</code>, <code>objection</code> (for dynamic
+analysis)</li>
+</ul></li>
+<li><strong>Signing Tools</strong>:
+<ul>
+<li><code>zipalign</code></li>
+<li><code>apksigner</code></li>
+</ul></li>
+<li><strong>Traffic Analysis Tools</strong>:
+<ul>
+<li><code>Burp Suite</code></li>
+</ul></li>
+</ul>
+<hr />
+<h2 id="step-1-environment-setup">Step 1: Environment Setup</h2>
+<h3 id="install-reverse-engineering-tools">Install Reverse Engineering
+Tools</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install apktool jadx zipalign apksigner frida-tools</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install mitmproxy</span></code></pre></div>
+<p>Or use <strong>Docker-based Android RE environments</strong> like <a
+href="https://github.com/ashishb/android-security-awesome">AndroidRE</a>.</p>
+<hr />
+<h2 id="step-2-download-the-apk">Step 2: Download the APK</h2>
+<p>Download FairEmail from <a
+href="https://github.com/M66B/FairEmail/releases">GitHub Releases</a> or
+extract it from your device using <code>adb</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> shell pm list packages <span class="kw">|</span> <span class="fu">grep</span> fairemail</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> shell pm path eu.faircode.email</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> pull /data/app/your.path.to.faircode/base.apk ./FairEmail.apk</span></code></pre></div>
+<hr />
+<h2 id="step-3-decompile-the-apk">Step 3: Decompile the APK</h2>
+<h3 id="decode-resources-with-apktool">Decode Resources with
+apktool</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">apktool</span> d FairEmail.apk <span class="at">-o</span> FairEmail-src</span></code></pre></div>
+<p>This gives you <code>smali</code> code and the
+<code>AndroidManifest.xml</code>.</p>
+<h3 id="inspect-java-with-jadx">🔎 Inspect Java with jadx</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">jadx</span> <span class="at">-d</span> FairEmail-java FairEmail.apk</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># or open GUI with</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">jadx-gui</span> FairEmail.apk</span></code></pre></div>
+<p>Look for:</p>
+<ul>
+<li>Login/authentication logic (e.g.,
+<code>Authenticator.java</code>)</li>
+<li>API call handlers (e.g., <code>Retrofit</code>,
+<code>OkHttp</code>)</li>
+<li>Constants or hardcoded strings</li>
+</ul>
+<hr />
+<h2 id="step-4-analyze-ssl-pinning">Step 4: Analyze SSL Pinning</h2>
+<p>FairEmail implements SSL pinning. Search for:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode java"><code class="sourceCode java"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">TrustManager</span><span class="op">[]</span> trustAllCerts <span class="op">=</span> <span class="kw">new</span> <span class="bu">TrustManager</span><span class="op">[]</span> <span class="op">{</span> <span class="kw">...</span> <span class="op">};</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">HostnameVerifier</span> verifier <span class="op">=</span> <span class="op">(</span>hostname<span class="op">,</span> session<span class="op">)</span> <span class="op">-&gt;</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div>
+<p>Look for use of <code>CertificatePinner</code>,
+<code>X509TrustManager</code>, or custom verifiers in files like
+<code>HttpClientFactory.java</code>.</p>
+<hr />
+<h2 id="step-5-bypass-ssl-pinning">Step 5: Bypass SSL Pinning</h2>
+<h3 id="option-1-frida-script">Option 1: Frida Script</h3>
+<p>Install <code>frida-server</code> on the emulator/device:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> push frida-server /data/local/tmp/</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> shell <span class="st">&quot;chmod 755 /data/local/tmp/frida-server &amp;&amp; /data/local/tmp/frida-server &amp;&quot;</span></span></code></pre></div>
+<p>Use this Frida script to bypass pinning:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ssl-bypass.js</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>Java<span class="op">.</span><span class="fu">perform</span>(<span class="kw">function</span> () {</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> X509TrustManager <span class="op">=</span> Java<span class="op">.</span><span class="fu">use</span>(<span class="st">&#39;javax.net.ssl.X509TrustManager&#39;</span>)<span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> SSLContext <span class="op">=</span> Java<span class="op">.</span><span class="fu">use</span>(<span class="st">&#39;javax.net.ssl.SSLContext&#39;</span>)<span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> TrustManager <span class="op">=</span> Java<span class="op">.</span><span class="fu">registerClass</span>({</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">name</span><span class="op">:</span> <span class="st">&#39;dev.bypass.TrustManager&#39;</span><span class="op">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">implements</span><span class="op">:</span> [X509TrustManager]<span class="op">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">methods</span><span class="op">:</span> {</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">checkClientTrusted</span><span class="op">:</span> <span class="kw">function</span> () {}<span class="op">,</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">checkServerTrusted</span><span class="op">:</span> <span class="kw">function</span> () {}<span class="op">,</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">getAcceptedIssuers</span><span class="op">:</span> <span class="kw">function</span> () {</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> []<span class="op">;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> TrustManagers <span class="op">=</span> [TrustManager<span class="op">.</span><span class="fu">$new</span>()]<span class="op">;</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> SSLContextInit <span class="op">=</span> SSLContext<span class="op">.</span><span class="at">init</span><span class="op">.</span><span class="fu">overload</span>(</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;[Ljavax.net.ssl.KeyManager;&#39;</span><span class="op">,</span> <span class="st">&#39;[Ljavax.net.ssl.TrustManager;&#39;</span><span class="op">,</span> <span class="st">&#39;java.security.SecureRandom&#39;</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  )<span class="op">;</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  SSLContextInit<span class="op">.</span><span class="at">implementation</span> <span class="op">=</span> <span class="kw">function</span> (km<span class="op">,</span> tm<span class="op">,</span> sr) {</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    SSLContextInit<span class="op">.</span><span class="fu">call</span>(<span class="kw">this</span><span class="op">,</span> km<span class="op">,</span> TrustManagers<span class="op">,</span> sr)<span class="op">;</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Then run:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">frida</span> <span class="at">-U</span> <span class="at">-n</span> eu.faircode.email <span class="at">-l</span> ssl-bypass.js</span></code></pre></div>
+<h3 id="option-2-rebuild-and-patch">Option 2: Rebuild and Patch</h3>
+<p>Use <code>apktool</code> to decompile, patch the <code>smali</code>,
+then rebuild and resign:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">apktool</span> b FairEmail-src <span class="at">-o</span> FairEmail-patched.apk</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">zipalign</span> <span class="at">-v</span> 4 FairEmail-patched.apk FairEmail-aligned.apk</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">apksigner</span> sign <span class="at">--ks</span> your-release.keystore FairEmail-aligned.apk</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> install <span class="at">-r</span> FairEmail-aligned.apk</span></code></pre></div>
+<hr />
+<h2 id="step-6-capture-and-analyze-network-traffic">Step 6: Capture and
+Analyze Network Traffic</h2>
+<h3 id="set-up-mitm-proxy">Set Up MITM Proxy</h3>
+<p>Configure the Android emulator to use <code>mitmproxy</code>:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mitmproxy</span> <span class="at">--mode</span> transparent <span class="at">--showhost</span></span></code></pre></div>
+<p>Install the mitmproxy CA cert on the emulator:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> push mitmproxy-ca-cert.cer /sdcard/</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">adb</span> shell am start <span class="at">-a</span> android.intent.action.VIEW <span class="at">-t</span> application/x-x509-ca-cert <span class="at">-d</span> file:///sdcard/mitmproxy-ca-cert.cer</span></code></pre></div>
+<h3 id="analyze-httphttps-calls">Analyze HTTP/HTTPS Calls</h3>
+<p>After bypassing pinning, you should now see FairEmail’s API traffic.
+Focus on:</p>
+<ul>
+<li>Login POST requests</li>
+<li>Token refreshes</li>
+<li>Email syncs</li>
+<li>Header structure (Auth tokens, Device info, etc.)</li>
+</ul>
+<hr />
+<h2 id="step-7-modify-app-behavior">Step 7: Modify App Behavior</h2>
+<p>You can hook methods using Frida or modify the APK logic to:</p>
+<ul>
+<li>Auto-fill credentials</li>
+<li>Disable telemetry</li>
+<li>Redirect endpoints</li>
+</ul>
+<p>Example Frida method hook:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode js"><code class="sourceCode javascript"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>Java<span class="op">.</span><span class="fu">perform</span>(<span class="kw">function</span> () {</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> Auth <span class="op">=</span> Java<span class="op">.</span><span class="fu">use</span>(<span class="st">&quot;eu.faircode.email.Authenticator&quot;</span>)<span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  Auth<span class="op">.</span><span class="at">login</span><span class="op">.</span><span class="at">implementation</span> <span class="op">=</span> <span class="kw">function</span> (email<span class="op">,</span> pass) {</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Intercepted login:&quot;</span><span class="op">,</span> email<span class="op">,</span> pass)<span class="op">;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">this</span><span class="op">.</span><span class="fu">login</span>(email<span class="op">,</span> pass)<span class="op">;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<hr />
+<h2 id="step-8-ethical-reporting">Step 8: Ethical Reporting</h2>
+<p>If you uncover sensitive security flaws:</p>
+<ol type="1">
+<li>Reproduce and document clearly.</li>
+<li>Contact the FairEmail developer via GitHub or email.</li>
+<li>Disclose privately and responsibly.</li>
+</ol>
+<hr />
+<h2 id="resources">Resources</h2>
+<ul>
+<li><a href="https://github.com/M66B/FairEmail">FairEmail
+GitHub</a></li>
+<li><a href="https://frida.re/">Frida</a></li>
+<li><a href="https://github.com/skylot/jadx">jadx</a></li>
+<li><a href="https://ibotpeaches.github.io/Apktool/">apktool</a></li>
+<li><h2 id="owasp-mobile-testing-guide"><a
+href="https://owasp.org/www-project-mobile-security-testing-guide/">OWASP
+Mobile Testing Guide</a></h2></li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p>Reverse engineering modern Android apps like FairEmail is an
+effective way to learn mobile security, SSL pinning mechanisms, and the
+inner workings of app authentication. When conducted responsibly, these
+exercises support app hardening and help identify overlooked
+vulnerabilities.</p>
+<hr />
+<p>Questions? Want to try this with other apps? Leave a comment or reach
+out on GitHub!</p>
+<hr />
+<h2 id="your-objective">Your Objective</h2>
+<p>The objective of this project is to reverse engineer the FairEmail
+application to better understand its internal authentication mechanisms,
+SSL pinning implementation, and network communication flow. This
+includes analyzing static code, bypassing security controls like SSL
+pinning, and capturing live traffic for deeper insight.</p>
+<hr />
+<h2 id="tools-used">Tools Used</h2>
+<ul>
+<li><strong>APKTool</strong>: For decoding and rebuilding the APK
+file.</li>
+<li><strong>JADX</strong>: Java decompiler to view source-level
+logic.</li>
+<li><strong>Frida</strong>: Dynamic instrumentation toolkit used to hook
+into live methods and bypass SSL pinning.</li>
+<li><strong>mitmproxy</strong>: To capture HTTP/HTTPS traffic after
+bypassing SSL pinning.</li>
+<li><strong>ADB</strong>: Android Debug Bridge for interacting with the
+emulator/device.</li>
+<li><strong>zipalign &amp; apksigner</strong>: For realigning and
+resigning APKs after modification.</li>
+</ul>
+<p><em>Note: Frida and mitmproxy are especially useful tools not covered
+in all classes and are powerful for dynamic mobile application
+testing.</em></p>
+<hr />
+<h2 id="background-information-on-fairemail">Background Information on
+FairEmail</h2>
+<p>FairEmail is a fully open-source email client that emphasizes privacy
+and user control. Unlike commercial alternatives, FairEmail offers
+minimal background tracking, supports standard email protocols, and
+integrates various security features such as end-to-end encryption and
+certificate pinning. Its open-source nature makes it ideal for learning
+reverse engineering in a legal and transparent way.</p>
+<hr />
+<h2 id="walk-through-of-the-process">Walk-Through of the Process</h2>
+<p>This blog includes a detailed, step-by-step process: 1. <strong>APK
+Acquisition</strong> – Extracting the APK from GitHub or a device. 2.
+<strong>Decompilation</strong> – Using APKTool and JADX to inspect smali
+and Java code. 3. <strong>SSL Pinning Discovery</strong> – Identifying
+where certificate pinning is enforced. 4. <strong>Pinning
+Bypass</strong> – Deploying Frida to override SSL enforcement at
+runtime. 5. <strong>Traffic Capture</strong> – Setting up mitmproxy and
+confirming that traffic is now visible. 6. <strong>Code Hooks</strong> –
+Using Frida to hook methods like login or token validation.</p>
+<p>This guide is crafted so that even beginner reverse engineers can
+follow along successfully.</p>
+<hr />
+<h2 id="dead-ends-and-recovery">Dead Ends and Recovery</h2>
+<ul>
+<li><strong>Initial Traffic Blockage</strong>: All HTTPS traffic was
+encrypted due to SSL pinning. Attempts to use mitmproxy without patching
+failed.
+<ul>
+<li><em>Fix</em>: Implemented Frida SSL bypass successfully.</li>
+</ul></li>
+<li><strong>App Crash After Repackaging</strong>: Rebuilt APK failed to
+launch initially.
+<ul>
+<li><em>Fix</em>: Ensured proper zipalign and signed the APK with a
+debug keystore.</li>
+</ul></li>
+</ul>
+<p>These experiences reinforce the value of dynamic analysis tools when
+static patching fails.</p>
+<hr />
+<h2 id="results">Results</h2>
+<ul>
+<li>Successfully bypassed SSL pinning on FairEmail.</li>
+<li>Captured live authentication and sync traffic via mitmproxy.</li>
+<li>Hooked and logged login credentials using Frida.</li>
+<li>Gained understanding of internal class structure and network
+flow.</li>
+</ul>
+<hr />
+<h2 id="future-reverse-engineering-goals">Future Reverse Engineering
+Goals</h2>
+<ul>
+<li>Trace email encryption logic and how attachments are handled.</li>
+<li>Explore SQLite database structure used for email storage.</li>
+<li>Investigate background sync and push notification services.</li>
+<li>Attempt control-flow obfuscation deconstruction using tools like
+<code>JEB</code> or <code>Ghidra</code>.</li>
+</ul>
+<p>This project forms a strong foundation for further mobile application
+security testing and reverse engineering.</p>
+<hr />
