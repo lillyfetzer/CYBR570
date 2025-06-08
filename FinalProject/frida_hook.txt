@@ -1,0 +1,1 @@
+frida-trace -n FairEmail -U -j 'eu.faircode.email.ServiceAuthenticator!refreshToken'
